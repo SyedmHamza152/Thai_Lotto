@@ -75,7 +75,7 @@
     overflow-y: auto;
     z-index: 100;
     scrollbar-width: none;
-    transition: transform 0.25s ease;
+    /* NO transform on desktop — avoids WebKit stacking context issues */
   }
   .sidebar::-webkit-scrollbar { display: none; }
 
@@ -256,14 +256,39 @@
 
   /* ── RESPONSIVE: MOBILE ── */
   @media (max-width: 768px) {
-    /* sidebar hides off-screen */
+    /*
+      KEY FIX: On mobile WebKit, using transform on a position:fixed element
+      that also has overflow-y:auto creates a new stacking context that can
+      cause child elements to not paint correctly (appear invisible/blank).
+
+      Solution: Use left:-100% / left:0 instead of transform for the
+      slide-in animation. This avoids the WebKit stacking context issue
+      while keeping the smooth transition.
+
+      Also add -webkit-overflow-scrolling and will-change to force GPU layer.
+    */
     .sidebar {
-      transform: translateX(-100%);
+      left: -100%;
       width: 80vw;
       max-width: 300px;
+      /* Force a GPU compositing layer so children paint correctly */
+      -webkit-overflow-scrolling: touch;
+      will-change: left;
+      /* Use left transition instead of transform */
+      transition: left 0.25s ease;
+      /* Ensure sidebar itself is visible */
+      visibility: visible;
     }
-    .sidebar.open { transform: translateX(0); }
+    .sidebar.open {
+      left: 0;
+    }
     .sidebar-close { display: block; }
+
+    /* Ensure all sidebar children are visible and painted */
+    .sidebar * {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
 
     /* nav spans full width on mobile */
     .nav {
@@ -681,7 +706,7 @@ function closeSidebar() {
   document.body.style.overflow = '';
 }
 
-// ── Section switching — same logic as original, extended for bottom nav ──
+// ── Section switching ──
 function showSection(sectionId) {
   document.querySelectorAll('.section').forEach(section => {
     section.classList.add('hidden');
@@ -705,7 +730,7 @@ function showSection(sectionId) {
   closeSidebar();
 }
 
-// ── Game dropdown — unchanged ──
+// ── Game dropdown ──
 function toggleGameDropdown() {
   const menu = document.getElementById('gameDropdownMenu');
   const btn = document.querySelector('.game-dropdown-btn');
@@ -732,7 +757,7 @@ document.addEventListener('click', function(event) {
   }
 });
 
-// ── Everything below is IDENTICAL to original backend wiring ──
+// ── Backend wiring (identical to original) ──
 if (!requireAuth(false)) {} else {
   (async () => {
   const who = document.getElementById("who");
