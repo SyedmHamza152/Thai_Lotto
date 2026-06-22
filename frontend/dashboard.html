@@ -6,7 +6,6 @@
 <title>Dashboard — Lottery</title>
 <link rel="stylesheet" href="css/styles.css"/>
 <style>
-  /* ── New visual layer (does not touch original IDs/classes used by JS) ── */
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
   :root {
@@ -25,6 +24,8 @@
     --muted2: #4a4a65;
   }
 
+  *, *::before, *::after { box-sizing: border-box; }
+
   body {
     font-family: 'Inter', sans-serif;
     background: var(--bg) !important;
@@ -32,7 +33,7 @@
     margin: 0;
   }
 
-  /* Hide the old top nav bar visually but keep it in DOM (id="who", logout button) */
+  /* ── TOP NAV ── */
   .nav {
     position: fixed;
     top: 0; left: var(--sb-w); right: 0;
@@ -42,13 +43,12 @@
     display: flex; align-items: center; justify-content: flex-end;
     padding: 0 28px;
     z-index: 50;
-    box-sizing: border-box;
   }
   .nav .right { display: flex; align-items: center; gap: 12px; }
   .nav .pill {
     background: var(--surface2); border: 1px solid var(--border);
     padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
-    color: var(--text);
+    color: var(--text); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .nav .btn.ghost {
     background: transparent; border: 1px solid var(--border); color: var(--text);
@@ -56,7 +56,16 @@
   }
   .nav .btn.ghost:hover { background: var(--surface2); }
 
-  /* Sidebar restyle — same elements/classes/onclicks as original */
+  /* hamburger — hidden on desktop */
+  .hamburger {
+    display: none;
+    background: none; border: none; cursor: pointer;
+    padding: 8px; border-radius: 8px; color: var(--text);
+    flex-shrink: 0;
+  }
+  .hamburger svg { display: block; }
+
+  /* ── SIDEBAR ── */
   .sidebar {
     width: var(--sb-w);
     background: var(--surface);
@@ -65,16 +74,32 @@
     top: 0; left: 0; bottom: 0;
     overflow-y: auto;
     z-index: 100;
-    box-sizing: border-box;
     scrollbar-width: none;
+    transition: transform 0.25s ease;
   }
   .sidebar::-webkit-scrollbar { display: none; }
+
+  /* overlay (mobile only) */
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 99;
+  }
+  .sidebar-overlay.show { display: block; }
 
   .sidebar-brand {
     padding: 22px 20px 18px;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 21px; font-weight: 700; letter-spacing: -0.5px;
     color: var(--text);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  /* close button inside sidebar (mobile) */
+  .sidebar-close {
+    display: none;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 22px; line-height: 1; padding: 2px 6px;
   }
 
   .sidebar-section { margin-bottom: 8px; padding-top: 4px; }
@@ -98,18 +123,17 @@
   }
   .sidebar-item-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
 
-  /* Main content area shifted right of sidebar + below topbar */
+  /* ── MAIN CONTENT ── */
   .main-content {
     margin-left: var(--sb-w);
     margin-top: 60px;
     padding: 28px;
-    box-sizing: border-box;
     min-height: calc(100vh - 60px);
   }
 
   .section.hidden { display: none; }
 
-  /* Cards */
+  /* ── CARDS ── */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -129,12 +153,13 @@
   .row { display: grid; gap: 20px; }
   .row.cols-2 { grid-template-columns: 1fr 1fr; }
 
-  /* Table */
-  .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 420px; }
   .table th {
     text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   .table td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
   .table tr:last-child td { border-bottom: none; }
@@ -148,12 +173,12 @@
   .badge.good { background: rgba(16,185,129,0.15); color: #10b981; }
   .badge.bad { background: rgba(239,68,68,0.15); color: #ef4444; }
 
-  /* Forms */
+  /* ── FORMS ── */
   label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
   .input {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     color: var(--text); padding: 11px 14px; border-radius: 10px;
-    font-size: 14px; font-family: inherit; outline: none; box-sizing: border-box;
+    font-size: 14px; font-family: inherit; outline: none;
     transition: border-color 0.15s;
   }
   .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
@@ -181,7 +206,7 @@
   .numbers { display: flex; gap: 12px; }
   .numbers .input { text-align: center; font-size: 22px; font-weight: 700; padding: 12px 8px; }
 
-  /* Game dropdown */
+  /* ── GAME DROPDOWN ── */
   .game-dropdown { position: relative; max-width: 420px; }
   .game-dropdown-btn {
     display: flex; align-items: center; justify-content: space-between;
@@ -209,18 +234,100 @@
     font-size: 14px; font-weight: 600; text-decoration: none;
   }
   .whatsapp-btn:hover { opacity: 0.9; }
+
+  /* ── BOTTOM NAV (mobile only) ── */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    align-items: stretch;
+  }
+  .bottom-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; padding: 6px 4px;
+    font-size: 10px; font-weight: 600; color: var(--muted);
+    transition: color 0.15s;
+  }
+  .bottom-nav-item.active { color: var(--primary); }
+  .bottom-nav-item .bn-icon { font-size: 20px; line-height: 1; }
+
+  /* ── RESPONSIVE: MOBILE ── */
+  @media (max-width: 768px) {
+    /* sidebar hides off-screen */
+    .sidebar {
+      transform: translateX(-100%);
+      width: 80vw;
+      max-width: 300px;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-close { display: block; }
+
+    /* nav spans full width on mobile */
+    .nav {
+      left: 0;
+      padding: 0 16px;
+      justify-content: space-between;
+    }
+    .hamburger { display: flex; align-items: center; justify-content: center; }
+
+    .main-content {
+      margin-left: 0;
+      margin-top: 60px;
+      margin-bottom: 60px; /* room for bottom nav */
+      padding: 16px;
+    }
+
+    .card { padding: 16px; border-radius: 14px; }
+    .card h2 { font-size: 18px; }
+
+    .row.cols-2 { grid-template-columns: 1fr; }
+
+    .balance { font-size: 26px; }
+
+    .numbers { gap: 8px; }
+    .numbers .input { font-size: 18px; padding: 10px 4px; }
+
+    .game-dropdown { max-width: 100%; }
+
+    .bottom-nav { display: flex; }
+
+    /* tip boxes */
+    .card p[style*="border-left"] { font-size: 13px !important; }
+  }
+
+  @media (max-width: 380px) {
+    .nav .pill { max-width: 120px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Sidebar overlay (mobile tap-outside-to-close) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <div class="nav">
+  <!-- hamburger (mobile) -->
+  <button class="hamburger" onclick="openSidebar()" aria-label="Open menu">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="19" y2="6"/>
+      <line x1="3" y1="11" x2="19" y2="11"/>
+      <line x1="3" y1="16" x2="19" y2="16"/>
+    </svg>
+  </button>
   <div class="right">
     <span class="pill" id="who"></span>
     <button class="btn ghost" onclick="logout()">Logout</button>
   </div>
 </div>
 
-<div class="sidebar">
-  <div class="sidebar-brand">LOTTERY HUB</div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    LOTTERY HUB
+    <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close menu">✕</button>
+  </div>
 
   <div class="sidebar-section">
     <div class="sidebar-item active" onclick="showSection('dashboard')">
@@ -285,7 +392,32 @@
   </div>
 </div>
 
+<!-- Bottom Nav (mobile only) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-item active" onclick="showSection('dashboard')" data-section="dashboard">
+    <span class="bn-icon">🏠</span>
+    <span>Home</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showSection('deposit')" data-section="deposit">
+    <span class="bn-icon">💳</span>
+    <span>Recharge</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showSection('play-games')" data-section="play-games">
+    <span class="bn-icon">🎮</span>
+    <span>Play</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showSection('wallet')" data-section="wallet">
+    <span class="bn-icon">💰</span>
+    <span>Wallet</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showSection('help')" data-section="help">
+    <span class="bn-icon">❓</span>
+    <span>Help</span>
+  </div>
+</nav>
+
 <div class="main-content">
+
   <!-- Dashboard Section -->
   <div id="section-dashboard" class="section">
     <div class="card">
@@ -312,27 +444,30 @@
           <strong>💡 Tip:</strong> Start with small bets to learn the game. Good luck!
         </p>
         <p style="margin-top: 16px; padding: 16px; background: var(--surface2); border-radius: 12px; border-left: 4px solid var(--primary); color: var(--text);">
-          <strong>🎁 43% Cashback on Every Bet</strong> 
-Every time you place a bet, you will receive 43% cashback instantly.
-For example, if you play a $100 bet, only $57 will be deducted from your account while $43 will be returned back to your balance.
-</p>
-
-<p style="margin-top: 16px; padding: 16px; background: var(--surface2); border-radius: 12px; border-left: 4px solid var(--primary); color: var(--text);">
-<strong>💰 10% Deduction on Winnings</strong>
-A 10% fee will be applied on all winnings before they are credited to your account.
-For example, if you win $100, you will receive $90 after deduction.
-</p>
+          <strong>🎁 43% Cashback on Every Bet</strong><br>
+          Every time you place a bet, you will receive 43% cashback instantly.
+          For example, if you play a $100 bet, only $57 will be deducted from your account while $43 will be returned back to your balance.
+        </p>
+        <p style="margin-top: 16px; padding: 16px; background: var(--surface2); border-radius: 12px; border-left: 4px solid var(--primary); color: var(--text);">
+          <strong>💰 10% Deduction on Winnings</strong><br>
+          A 10% fee will be applied on all winnings before they are credited to your account.
+          For example, if you win $100, you will receive $90 after deduction.
+        </p>
       </div>
     </div>
 
     <div class="row cols-2">
       <div class="card">
         <h3>My Tickets</h3>
-        <table class="table"><thead><tr><th>#</th><th>Numbers</th><th>Type</th><th>Wager</th><th>Status</th><th>Date</th></tr></thead><tbody id="ticketRows"></tbody></table>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>#</th><th>Numbers</th><th>Type</th><th>Wager</th><th>Status</th><th>Date</th></tr></thead><tbody id="ticketRows"></tbody></table>
+        </div>
       </div>
       <div class="card">
         <h3>Recent Winners</h3>
-        <table class="table"><thead><tr><th>User</th><th>Numbers</th><th>Type</th><th>Prize</th><th>Date</th></tr></thead><tbody id="winnerRows"></tbody></table>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>User</th><th>Numbers</th><th>Type</th><th>Prize</th><th>Date</th></tr></thead><tbody id="winnerRows"></tbody></table>
+        </div>
       </div>
     </div>
   </div>
@@ -417,7 +552,9 @@ For example, if you win $100, you will receive $90 after deduction.
       </form>
       <div style="height:20px"></div>
       <h3>My Deposits</h3>
-      <table class="table"><thead><tr><th>ID</th><th>PKR</th><th>SAR (on approval)</th><th>Status</th><th>Date</th></tr></thead><tbody id="depRows"></tbody></table>
+      <div class="table-wrap">
+        <table class="table"><thead><tr><th>ID</th><th>PKR</th><th>SAR (on approval)</th><th>Status</th><th>Date</th></tr></thead><tbody id="depRows"></tbody></table>
+      </div>
     </div>
   </div>
 
@@ -433,7 +570,7 @@ For example, if you win $100, you will receive $90 after deduction.
     </div>
   </div>
 
-  <!-- Wallet Section (kept as placeholder — no JS hookup existed in original) -->
+  <!-- Wallet Section -->
   <div id="section-wallet" class="section hidden">
     <div class="card">
       <h2>My Wallet</h2>
@@ -445,7 +582,9 @@ For example, if you win $100, you will receive $90 after deduction.
   <div id="section-history" class="section hidden">
     <div class="card">
       <h2>My Lottery Play History</h2>
-      <table class="table"><thead><tr><th>#</th><th>Numbers</th><th>Type</th><th>Wager</th><th>Status</th><th>Date</th></tr></thead><tbody id="historyRows"></tbody></table>
+      <div class="table-wrap">
+        <table class="table"><thead><tr><th>#</th><th>Numbers</th><th>Type</th><th>Wager</th><th>Status</th><th>Date</th></tr></thead><tbody id="historyRows"></tbody></table>
+      </div>
     </div>
   </div>
 
@@ -453,7 +592,9 @@ For example, if you win $100, you will receive $90 after deduction.
   <div id="section-transactions" class="section hidden">
     <div class="card">
       <h2>Transaction Summary</h2>
-      <table class="table"><thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="txnRows"></tbody></table>
+      <div class="table-wrap">
+        <table class="table"><thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="txnRows"></tbody></table>
+      </div>
     </div>
   </div>
 
@@ -487,7 +628,9 @@ For example, if you win $100, you will receive $90 after deduction.
   <div id="section-referrals" class="section hidden">
     <div class="card">
       <h2>Referrals List</h2>
-      <table class="table"><thead><tr><th>User ID</th><th>Username</th><th>Joined</th><th>Status</th></tr></thead><tbody id="referralRows"></tbody></table>
+      <div class="table-wrap">
+        <table class="table"><thead><tr><th>User ID</th><th>Username</th><th>Joined</th><th>Status</th></tr></thead><tbody id="referralRows"></tbody></table>
+      </div>
     </div>
   </div>
 
@@ -496,7 +639,6 @@ For example, if you win $100, you will receive $90 after deduction.
     <div class="card">
       <h2>Help & Support</h2>
       <p class="muted" style="margin-bottom: 24px;">Need assistance? Contact us via WhatsApp for quick support.</p>
-
       <div style="margin:24px 0">
         <a href="https://wa.me/923071909577" target="_blank" class="whatsapp-btn">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -505,7 +647,6 @@ For example, if you win $100, you will receive $90 after deduction.
           WhatsApp: 03071909577
         </a>
       </div>
-
       <div style="margin-top:24px">
         <h3>Frequently Asked Questions</h3>
         <div style="margin-top:16px; line-height: 1.8;">
@@ -523,61 +664,75 @@ For example, if you win $100, you will receive $90 after deduction.
       </div>
     </div>
   </div>
-</div>
+
+</div><!-- end main-content -->
 
 <script src="js/api.js"></script>
 <script>
-// Section switching functionality — unchanged logic, only extended to toggle .hidden
+// ── Sidebar open/close (mobile) ──
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ── Section switching — same logic as original, extended for bottom nav ──
 function showSection(sectionId) {
   document.querySelectorAll('.section').forEach(section => {
     section.classList.add('hidden');
   });
-
   document.getElementById(`section-${sectionId}`).classList.remove('hidden');
 
+  // sidebar active state
   document.querySelectorAll('.sidebar-item').forEach(item => {
     item.classList.remove('active');
   });
-
   if (event && event.target && event.target.closest('.sidebar-item')) {
     event.target.closest('.sidebar-item').classList.add('active');
   }
+
+  // bottom nav active state
+  document.querySelectorAll('.bottom-nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.section === sectionId);
+  });
+
+  // close sidebar on mobile after navigation
+  closeSidebar();
 }
 
-// Game dropdown functionality — unchanged
+// ── Game dropdown — unchanged ──
 function toggleGameDropdown() {
   const menu = document.getElementById('gameDropdownMenu');
   const btn = document.querySelector('.game-dropdown-btn');
   menu.classList.toggle('show');
   btn.classList.toggle('active');
 }
-
 function selectGame(gameId) {
   const menu = document.getElementById('gameDropdownMenu');
   const btn = document.querySelector('.game-dropdown-btn');
   const selectedGame = document.getElementById('selectedGame');
   const playArea = document.getElementById('game-play-area');
-
   menu.classList.remove('show');
   btn.classList.remove('active');
-
   if (gameId === '3up') {
     selectedGame.textContent = '🎯 3UP Lottery';
     playArea.style.display = 'block';
   }
 }
-
 document.addEventListener('click', function(event) {
   const dropdown = document.querySelector('.game-dropdown');
   if (dropdown && !dropdown.contains(event.target)) {
-    const menu = document.getElementById('gameDropdownMenu');
-    const btn = document.querySelector('.game-dropdown-btn');
-    menu.classList.remove('show');
-    btn.classList.remove('active');
+    document.getElementById('gameDropdownMenu').classList.remove('show');
+    document.querySelector('.game-dropdown-btn').classList.remove('active');
   }
 });
 
-// ── Everything below is IDENTICAL to your original backend wiring ──
+// ── Everything below is IDENTICAL to original backend wiring ──
 if (!requireAuth(false)) {} else {
   (async () => {
   const who = document.getElementById("who");
