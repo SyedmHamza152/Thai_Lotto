@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pick3 — Lucky Draw Lottery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f14;
+    --surface: #17171f;
+    --surface2: #1e1e2a;
+    --surface3: #242433;
+    --border: #2a2a3a;
+    --primary: #a855f7;
+    --primary-glow: rgba(168,85,247,0.25);
+    --accent: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #f1f0ff;
+    --muted: #7b7a95;
+    --muted2: #4a4a65;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .page { position: relative; z-index: 1; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 22px; color: var(--text); letter-spacing: -0.3px; }
+  .nav-logo span { color: var(--primary); }
+  .nav-btns { display: flex; gap: 8px; }
+  .btn-nav {
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.18s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-nav.ghost { background: transparent; color: var(--text); }
+  .btn-nav.ghost:hover { background: var(--surface2); }
+  .btn-nav.solid { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; border-color: transparent; }
+  .btn-nav.solid:hover { box-shadow: 0 6px 18px rgba(168,85,247,0.45); transform: translateY(-1px); }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  .hero {
+    text-align: center;
+    padding: 5rem 1.5rem 3rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .draw-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 6px 18px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 2rem;
+    animation: fadeDown 0.5s ease both;
+  }
+  .draw-badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+    animation: pulse 1.8s infinite;
+  }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(38px, 7vw, 68px);
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    animation: fadeUp 0.55s 0.1s ease both;
+  }
+  .hero h1 em { color: var(--primary); font-style: italic; }
+  .hero > p {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 440px;
+    margin: 0 auto 2.5rem;
+    font-weight: 400;
+    animation: fadeUp 0.55s 0.2s ease both;
+  }
+  .balls-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.55s 0.3s ease both;
+  }
+  .ball {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    color: var(--text);
+    background: var(--surface);
+    border: 2px solid var(--primary);
+    position: relative;
+    overflow: hidden;
+  }
+  .ball::after {
+    content: '';
+    position: absolute;
+    top: 10%; left: 20%;
+    width: 30%; height: 20%;
+    border-radius: 50%;
+    background: rgba(168,85,247,0.12);
+  }
+  .hero-cta {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.55s 0.35s ease both;
+  }
+  .btn-primary {
+    padding: 13px 32px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 14px rgba(168,85,247,0.3);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(168,85,247,0.45); transform: translateY(-1px); }
+  .btn-outline {
+    padding: 13px 28px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-outline:hover { background: var(--surface2); }
+
+  .section-divider { border: none; border-top: 1px solid var(--border); max-width: 700px; margin: 0 auto; }
+  .section { padding: 3rem 1.5rem; max-width: 700px; margin: 0 auto; }
+  .section-heading { font-family: 'Space Grotesk', sans-serif; font-size: 28px; color: var(--text); margin-bottom: 0.5rem; text-align: center; }
+  .section-sub { font-size: 15px; color: var(--muted); text-align: center; margin-bottom: 2rem; font-weight: 400; }
+
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; }
+  .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; text-align: center; }
+  .step-num { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+  .step-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+  .step-card p { font-size: 13px; color: var(--muted); line-height: 1.5; font-weight: 400; }
+
+  .schedule-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .schedule-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; text-align: center; }
+  .schedule-date { font-family: 'Space Grotesk', sans-serif; font-size: 48px; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+  .schedule-label { font-size: 14px; color: var(--muted); font-weight: 400; }
+  .schedule-time { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--text); background: var(--surface2); border-radius: 6px; padding: 4px 12px; }
+
+  .modes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; }
+  .mode-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+  .mode-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 20px; }
+  .mode-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .mode-card p { font-size: 13px; color: var(--muted); line-height: 1.6; font-weight: 400; }
+  .mode-prize { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 500; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; }
+
+  footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; font-size: 12px; color: var(--muted); font-weight: 400; }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav>
+    <div class="nav-logo">Pick<span>3</span></div>
+    <div class="nav-btns">
+      <a class="btn-nav ghost" href="login.html">Login</a>
+      <a class="btn-nav solid" href="signup.html">Sign up</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="draw-badge">
+      <span class="dot"></span>
+      Lucky Draw — 1st &amp; 16th of every month
+    </div>
+    <h1>Pick three digits.<br><em>Win big</em> twice a month.</h1>
+    <p>Choose Straight, Rumble, or Box. Draws happen on the <strong>1st</strong> and <strong>16th</strong> — mark your calendar and never miss a win.</p>
+
+    <div class="balls-row">
+      <div class="ball" id="ball0">?</div>
+      <div class="ball" id="ball1">?</div>
+      <div class="ball" id="ball2">?</div>
+    </div>
+
+    <div class="hero-cta">
+      <a class="btn-primary" href="signup.html">Play now — it's free</a>
+      <button class="btn-outline" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How it works</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:1rem;font-weight:400">Must be 18+ · Play responsibly</p>
+  </section>
+
+  <hr class="section-divider"/>
+
+  <section class="section" id="how">
+    <div class="section-heading">How to play</div>
+    <div class="section-sub">Four steps between you and the jackpot.</div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Create account</h3>
+        <p>Sign up free in under a minute.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Pick 3 digits</h3>
+        <p>Choose any three numbers 0–9 for your entry.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Choose mode</h3>
+        <p>Straight, Rumble, or Box — each with its own odds.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h3>Watch the draw</h3>
+        <p>Live every 1st &amp; 16th at 9 PM. Winnings paid instantly.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider"/>
+
+  <section class="section">
+    <div class="section-heading">Draw schedule</div>
+    <div class="section-sub">Two guaranteed draws every single month.</div>
+    <div class="schedule-row">
+      <div class="schedule-card">
+        <div class="schedule-date">1st</div>
+        <div class="schedule-label">First of the month</div>
+        <div class="schedule-time">🕘 9:00 PM sharp</div>
+      </div>
+      <div class="schedule-card">
+        <div class="schedule-date">16th</div>
+        <div class="schedule-label">Mid of the month</div>
+        <div class="schedule-time">🕘 9:00 PM sharp</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--ink-soft);text-align:center;margin-top:1rem;font-weight:300">Ticket purchases close at 8:00 PM on draw day. Results posted live.</p>
+  </section>
+
+  <hr class="section-divider"/>
+
+  <section class="section">
+    <div class="section-heading">Play modes</div>
+    <div class="section-sub">Pick the style that suits your strategy.</div>
+    <div class="modes-grid">
+      <div class="mode-card">
+        <div class="mode-icon">🎯</div>
+        <h3>Straight</h3>
+        <p>Your three digits must match the draw in the exact same order. Highest reward, toughest odds.</p>
+        <span class="mode-prize">Top prize: PKR 5,00,000</span>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon">🔀</div>
+        <h3>Rumble</h3>
+        <p>Your digits can match in any order — six winning combinations from a single ticket.</p>
+        <span class="mode-prize">Top prize: PKR 80,000</span>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon">📦</div>
+        <h3>Box</h3>
+        <p>Win if all three digits appear anywhere in the result. Works with repeated digits too.</p>
+        <span class="mode-prize">Top prize: PKR 1,60,000</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Pick3 Lucky Draw &nbsp;·&nbsp; Draws held 1st &amp; 16th of every month &nbsp;·&nbsp; 18+ only &nbsp;·&nbsp; Play responsibly
+  </footer>
+</div>
+
+<script>
+  function spinBalls() {
+    const ids = ['ball0','ball1','ball2'];
+    let count = 0;
+    const iv = setInterval(() => {
+      ids.forEach(id => {
+        document.getElementById(id).textContent = Math.floor(Math.random()*10);
+      });
+      if (++count > 14) {
+        clearInterval(iv);
+        [3,7,2].forEach((n,i) => { document.getElementById('ball'+i).textContent = n; });
+      }
+    }, 70);
+  }
+  spinBalls();
+  setInterval(spinBalls, 7000);
+</script>
+</body>
+</html>
